@@ -15,14 +15,20 @@ class BaseOrganizationQuerySet(models.QuerySet):
 
     def for_user(self, user=None):
         # Never list all for membership
-        return self.filter(
-            Q(owners__in=[user]) | Q(teams__members__in=[user]),
-        ).distinct()
+        orgs = self.filter(
+            Q(owners__in=[user]) |
+            Q(teams__members__in=[user]),
+        )
+
+        # Add organizations where the user has GitHub SSO projects
+        orgs |= self.filter(projects__remote_repository__users__in=[user])
+
+        return orgs.distinct()
 
     def for_admin_user(self, user=None, include_all=False):
         if user.is_superuser and include_all:
             return self.all()
-        return self.filter(owners__in=[user],).distinct()
+        return self.filter(owners__in=[user]).distinct()
 
     def created_days_ago(self, days, field='pub_date'):
         """
