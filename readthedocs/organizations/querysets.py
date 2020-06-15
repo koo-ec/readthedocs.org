@@ -23,7 +23,10 @@ class BaseOrganizationQuerySet(models.QuerySet):
         # Add organizations where the user has GitHub SSO projects
         # TODO: change this Subquery once we have normalized our db
         # https://github.com/readthedocs/readthedocs.org/pull/7169
-        orgs |= self.filter(projects__remote_repository__full_name__in=Subquery(user.oauth_repositories.values('full_name')))
+        orgs |= self.filter(
+            projects__remote_repository__full_name__in=Subquery(user.oauth_repositories.values('full_name')),
+            ssointegration__isnull=False,
+        )
         return orgs.distinct()
 
     def for_admin_user(self, user=None, include_all=False):
