@@ -55,7 +55,7 @@ class GitHubService(Service):
 
         # Delete RemoteRepository where the user doesn't have access anymore
         # (skip RemoteRepository tied to a Project on this user)
-        full_names = {repo.full_name for repo in repos}
+        full_names = {repo.get('full_name') for repo in repos}
         self.user.oauth_repositories.exclude(
             Q(full_name__in=full_names) | Q(project__isnull=False)
         ).delete()
